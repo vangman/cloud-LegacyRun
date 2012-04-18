@@ -1,0 +1,2 @@
+sleep 10
+echo "RUNNING A BIG FAT APPLICATION"
