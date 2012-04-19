@@ -8,12 +8,15 @@ __author__ = 'vangelis'
 
 import web
 import json
+import time
 
 from ApplicationRun import Application
-#from ApplicationRun import AppState
+from ApplicationRun import AppState
 
 urls = (
     '/apprun', 'runner',
+    '/apprun/output', 'appoutput',
+    '/apprun/error', 'apperror'
 #    '/(\w+)', 'handleApplication',
 #    '/(\w+)/(\d+)', 'handleInstance',
 #    '/(\w+)/(\d+)/input', 'inputData',
@@ -43,7 +46,7 @@ class runner:
         app.prepareInput()
         
         msg = {"State": app.getState()}
-        return json.dumps(msg)
+        return json.dumps(msg) + "\n"
 
     def POST(self):
         #msg = {}
@@ -59,7 +62,7 @@ class runner:
     def DELETE(self):
         self.app.kill()
         msg = {"State": app.getState()}
-        return json.dumps(msg)
+        return json.dumps(msg) + "\n"
     
     def list2dic(self, inlist):
         outdic = {}
@@ -68,6 +71,47 @@ class runner:
                 outdic[key]=value
         
         return outdic
+
+class appoutput:
+    def GET(self):
+        # These headers make it work in browsers
+        web.header('Content-type','text/plain')
+        #web.header('Transfer-Encoding','chunked') 
+        if app.getState() == AppState.INIT or app.getState() == AppState.PROLOG or app.getState() == AppState.READY:
+            yield "File not ready for output"
+        else:
+            try:
+                f = open("/tmp/app-stdout.txt","r")
+                eof = False
+                while not eof:
+                    line = f.readline()
+                    if line!='':
+                        yield line
+                    else:
+                        time.sleep(5)
+            except: 
+                yield "Output not available"
+                
+class apperror:
+    def GET(self):
+        # These headers make it work in browsers
+        web.header('Content-type','text/plain')
+        #web.header('Transfer-Encoding','chunked') 
+        if app.getState() == AppState.INIT or app.getState() == AppState.PROLOG or app.getState() == AppState.READY:
+            yield "File not ready for error"
+        else:
+            try:
+                f = open("/tmp/app-stderr.txt","r")
+                eof = False
+                while not eof:
+                    line = f.readline()
+                    if line!='':
+                        yield line
+                    else:
+                        time.sleep(5)
+            except: 
+                yield "Error not available"
+            
 
 if __name__ == "__main__":
     webapp = web.application(urls, globals())

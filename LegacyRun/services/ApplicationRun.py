@@ -49,7 +49,7 @@ class Application:
         self.outputData = None
         self.stdout = None
         self.stderr = None
-        
+        print "Initializing..."
         self.setState(AppState.INIT)
 
 
@@ -172,21 +172,7 @@ def main(argv):
     #app.runBlocking()
     appProcess = app.run() 
     appProcess.wait()
-        
-    '''while appProcess.poll() is None:
-        (stdout, stderr) = appProcess.communicate()
-        print stdout
-
-    exitcode = appProcess.returncode
-
-    if exitcode == 0:
-        app.setState(AppState.DONE)
-        app.stageOutput()
-    else:
-        print "Exit code " + str(exitcode)
-        print "Ubnormal program termination. Output will not be staged"
-        app.setState(AppState.FAILED)
-    '''
+    
     sys.exit()
     
 
