@@ -60,7 +60,7 @@ class runner:
         return json.dumps(msg) + "\n"
 
     def DELETE(self):
-        self.app.kill()
+        app.kill()
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
     
