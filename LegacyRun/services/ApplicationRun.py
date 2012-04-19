@@ -45,15 +45,16 @@ class Application:
         self.environment = ""
         self.process = None
         self.monitorThread= None
-        
-        self.inputData = {"TERRAIN_DOMAIN1":"https://pithos.okeanos.grnet.gr/public/c57vn", \
-                            "EC_anal_iniz.2d_1deg":"https://pithos.okeanos.grnet.gr/public/b6ptc", \
-                            "namelist_regrid.input":"https://pithos.okeanos.grnet.gr/public/rtq5j", \
-                            "namelist_interpf.input":"https://pithos.okeanos.grnet.gr/public/ybtnr", \
-                            "LANDUSE.TBL":"https://pithos.okeanos.grnet.gr/public/whc88", \
-                            "mmlif.input":"https://pithos.okeanos.grnet.gr/public/jvcqq"}
+        self.inputData = None
+        self.outputData = None
+        #self.inputData = {  "TERRAIN_DOMAIN1":"https://pithos.okeanos.grnet.gr/public/c57vn", \
+        #                    "EC_anal_iniz.2d_1deg":"https://pithos.okeanos.grnet.gr/public/b6ptc", \
+        #                    "namelist_regrid.input":"https://pithos.okeanos.grnet.gr/public/rtq5j", \
+        #                    "namelist_interpf.input":"https://pithos.okeanos.grnet.gr/public/ybtnr", \
+        #                    "LANDUSE.TBL":"https://pithos.okeanos.grnet.gr/public/whc88", \
+        #                    "mmlif.input":"https://pithos.okeanos.grnet.gr/public/jvcqq"}
                                 
-        self.outputData = { "MMOUT_DOMAIN1_00":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
+        '''self.outputData = { "MMOUT_DOMAIN1_00":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
                             "MMOUT_DOMAIN1_02":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
                             "MMOUT_DOMAIN1_03":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
                             "MMOUT_DOMAIN1_04":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
@@ -95,7 +96,7 @@ class Application:
                             "MMOUT_DOMAIN1_34":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
                             "MMOUT_DOMAIN1_35":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1", \
                             "MMOUT_DOMAIN1_36":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"
-                        }
+                        }'''
                                 
         self.setState(AppState.INIT)
 
@@ -130,11 +131,9 @@ class Application:
     
     def run(self):
         print "Invoking Application"
-        if self.applicationName is not None:
+        if self.applicationName is not None and self.getState() == AppState.READY:
             gocommand = self.environment + self.applicationName
-            self.process = subprocess.Popen(gocommand, shell=True,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+            self.process = subprocess.Popen(gocommand)
             self.setState(AppState.RUNNING)
             
             # Start the monitoring thread
@@ -146,26 +145,29 @@ class Application:
             return None
 
     def runBlocking(self):
-        if self.applicationName is not None:
-            gocommand = self.environment + self.applicationName
-            self.setState(AppState.RUNNING)
-            os.system(gocommand)
-        self.setState(AppState.DONE)
+        if self.getState() == AppState.INIT:
+            if self.applicationName is not None:
+                gocommand = self.environment + self.applicationName
+                self.setState(AppState.RUNNING)
+                os.system(gocommand)
+            self.setState(AppState.DONE)
 
     def prepareInput(self):
-        self.setState(AppState.PROLOG)
-        for inputFile in self.inputData.keys():
-            print "Downloading " + self.inputData[inputFile]
-            downloadCommand = "curl -s " + self.inputData[inputFile] + " -o " + inputFile
-            os.system(downloadCommand)
-        self.setState(AppState.READY)
+        if self.getState() == AppState.INIT:
+            self.setState(AppState.PROLOG)
+            for inputFile in self.inputData.keys():
+                print "Downloading " + self.inputData[inputFile]
+                downloadCommand = "curl -s " + self.inputData[inputFile] + " -o " + inputFile
+                os.system(downloadCommand)
+            self.setState(AppState.READY)
             
     def stageOutput(self):
-        for outputFile in self.outputData.keys():
-            print "Uploading to object store " + outputFile
-            uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: x1ujZSFrFRgwCvs22NNiLA==\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile + "> /dev/null"
-            os.system(uploadCommand)
-        self.setState(AppState.CLEARED)
+        if self.getState() == AppState.DONE:
+            for outputFile in self.outputData.keys():
+                print "Uploading to object store " + outputFile
+                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: x1ujZSFrFRgwCvs22NNiLA==\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile + "> /dev/null"
+                os.system(uploadCommand)
+            self.setState(AppState.CLEARED)
             
     def poll(self):
         return self.process.poll()
@@ -186,25 +188,18 @@ class Application:
             return False
 
     def setInputData(self, dataref):
-        if dataref is not None and dataref not in self.inputData:
-            self.inputData.add(dataref)
-            return True
-        else:
-            return False
+        self.inputData = dataref
 
     def setOutputData(self, dataref):
-        if dataref is not None and dataref not in self.outputData:
-            self.outputData.add(dataref)
-            return True
-        else:
-            return False
+        self.outputData = dataref
         
     def monitor(self):
-        print "Now monitoring"
-        while self.process.poll() is None:
-            (stdout, stderr) = self.process.communicate()
-            print stdout
+        #print "Now monitoring"
+        #while self.process.poll() is None:
+        #    (stdout, stderr) = self.process.communicate()
+        #    print stdout
             
+        self.process.wait()
         exitcode = self.process.returncode
     
         if exitcode == 0:

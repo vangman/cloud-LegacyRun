@@ -10,7 +10,7 @@ import web
 import json
 
 from ApplicationRun import Application
-from ApplicationRun import AppState
+#from ApplicationRun import AppState
 
 urls = (
     '/apprun', 'runner',
@@ -20,37 +20,54 @@ urls = (
 #    '/(\w+)/(\d+)/output', 'outputData'
     )
 
-globalApp = Application()
+app = Application()
 
 class runner:
-    
-    def __init__(self):
-        self.app = globalApp
         
     def GET(self):
-        msg = {"State": self.app.getState()}
-        return json.dumps(msg)
+        msg = {"State": app.getState()}
+        return json.dumps(msg) + "\n"
 
     def PUT(self):
-        self.app.prepareInput()
-        return "Preparing input"
+        body = web.data()
+        decoder = json.JSONDecoder()
+        param = decoder.decode(body)
         
+        appConfig = param.get("application")
+        
+        infilelist = appConfig.get("inputFiles")
+        outfilelist = appConfig.get("outputFiles")
+        
+        app.setInputData(self.list2dic(infilelist))
+        app.setOutputData(self.list2dic(outfilelist))
+        app.prepareInput()
+        
+        msg = {"State": app.getState()}
+        return json.dumps(msg)
 
     def POST(self):
         #msg = {}
-        body = web.data()
-        decoder = json.JSONDecoder()
+        #body = web.data()
+        #decoder = json.JSONDecoder()
         #msg = decoder.decode(body)
         #print msg.get("applicationPath")
-        appProcess = self.app.run() 
+        app.run() 
             
-        msg = {"State": self.app.getState()}
-        
-        return json.dumps(msg)
+        msg = {"State": app.getState()}
+        return json.dumps(msg) + "\n"
 
     def DELETE(self):
         self.app.kill()
-        return "Killed application"
+        msg = {"State": app.getState()}
+        return json.dumps(msg)
+    
+    def list2dic(self, inlist):
+        outdic = {}
+        for itemdic in inlist:
+            for (key, value) in itemdic.iteritems():
+                outdic[key]=value
+        
+        return outdic
 
 if __name__ == "__main__":
     webapp = web.application(urls, globals())
