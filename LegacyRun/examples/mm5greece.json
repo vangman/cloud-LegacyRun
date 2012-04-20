@@ -3,7 +3,6 @@
 		"name":"MM5",
 		"inputFiles": [
 			{"TERRAIN_DOMAIN1":"https://pithos.okeanos.grnet.gr/public/c57vn"},
-			{"EC_anal_iniz.2d_1deg":"https://pithos.okeanos.grnet.gr/public/b6ptc"},
 			{"namelist_regrid.input":"https://pithos.okeanos.grnet.gr/public/rtq5j"},
 			{"namelist_interpf.input":"https://pithos.okeanos.grnet.gr/public/ybtnr"},
 			{"LANDUSE.TBL":"https://pithos.okeanos.grnet.gr/public/whc88"},
