@@ -82,7 +82,6 @@ class Application:
 
     
     def run(self):
-        print "Invoking Application"
         if self.applicationName is not None and self.getState() == AppState.READY:
             self.stdout = open("/tmp/app-stdout.txt", "w+")
             self.stderr = open("/tmp/app-stderr.txt", "w+")
@@ -148,11 +147,6 @@ class Application:
         self.outputData = dataref
         
     def monitor(self):
-        #print "Now monitoring"
-        #while self.process.poll() is None:
-        #    (stdout, stderr) = self.process.communicate()
-        #    print stdout
-            
         self.process.wait()
         exitcode = self.process.returncode
     

@@ -9,6 +9,7 @@ __author__ = 'vangelis'
 import web
 import json
 import time
+import os
 
 from ApplicationRun import Application
 from ApplicationRun import AppState
@@ -24,6 +25,8 @@ urls = (
     )
 
 app = Application()
+
+os.chdir(os.environ["APPLICATION_WORKSPACE"])
 
 class runner:
         

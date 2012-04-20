@@ -5,4 +5,5 @@ echo "More output"
 sleep 20
 echo "Even more output"
 sleep 20
+echo "fancy results" > output.txt
 echo "COMPLETED"
