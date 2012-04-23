@@ -35,6 +35,13 @@ class runner:
         return json.dumps(msg) + "\n"
 
     def PUT(self):
+        # Retrieve and set the storage access options
+        objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
+        storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
+        
+        app.setStorageOptions(objectStorage, storageToken)
+        
+        # Retrieve and set the input/output endpoints
         body = web.data()
         decoder = json.JSONDecoder()
         param = decoder.decode(body)
@@ -46,7 +53,6 @@ class runner:
         
         app.setInputData(self.list2dic(infilelist))
         app.setOutputData(self.list2dic(outfilelist))
-        app.prepareInput()
         
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
@@ -57,6 +63,8 @@ class runner:
         #decoder = json.JSONDecoder()
         #msg = decoder.decode(body)
         #print msg.get("applicationPath")
+        app.prepareInput()
+        
         app.run() 
             
         msg = {"State": app.getState()}
