@@ -9,7 +9,8 @@
 			{"mmlif.input":"https://pithos.okeanos.grnet.gr/public/jvcqq"}
 		  ],
 		"outputFiles": [
-			{"MMOUT_DOMAIN1_00":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}, 			                           
+			{"MMOUT_DOMAIN1_00":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"},
+			{"MMOUT_DOMAIN1_01":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}, 
 			{"MMOUT_DOMAIN1_02":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"},  
 			{"MMOUT_DOMAIN1_03":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"},  
 			{"MMOUT_DOMAIN1_04":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"},  
