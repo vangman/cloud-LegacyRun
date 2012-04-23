@@ -10,8 +10,8 @@ import subprocess
 import sys
 import os
 import threading
+import socket
 
-import random
 import pika
 from pika.adapters import BlockingConnection
 
@@ -25,9 +25,10 @@ class AppState:
     KILLED = "KILLED"
     DONE = "DONE"
     CLEARED = "CLEARED"
+    EPILOGUE = "EPILOGUE"
 
 class Application:
-    queue = 'legacyrun-' + str(random.randint(10000, 99999))
+    
 
     username = 'guest'
     password = 'guest'
@@ -40,6 +41,7 @@ class Application:
     }
 
     def __init__(self):
+        self.queue = 'lr.'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
         self.applicationName = "run.sh"
         self.environment = ""
@@ -63,13 +65,18 @@ class Application:
         
         # Declare the queue
         channel.queue_declare(queue=self.queue,
-                              durable=True,
+                              durable=False,
                               exclusive=False,
-                              auto_delete=False)
+                              auto_delete=True)
     
         print 'Sending notifications to queue: %s' % self.queue
 
         return (channel, connection)
+    
+    def setStorageOptions(self, storageType, storageToken):
+        # Actually only pithos is supported at this time
+        self.storageType = storageType
+        self.storageToken = storageToken
 
 
     def sendNotification(self, msgBody):
@@ -116,9 +123,10 @@ class Application:
             
     def stageOutput(self):
         if self.getState() == AppState.DONE:
+            self.setState(AppState.EPILOGUE)
             for outputFile in self.outputData.keys():
                 print "Uploading to object store " + outputFile
-                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: x1ujZSFrFRgwCvs22NNiLA==\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile + "> /dev/null"
+                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: " + self.storageToken +"\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile + "> /dev/null"
                 os.system(uploadCommand)
             self.setState(AppState.CLEARED)
             
@@ -158,19 +166,5 @@ class Application:
             print "Abnormal program termination. Output will not be staged"
             self.setState(AppState.FAILED)
         
-
-# main functions defined for test purposes only
-def main(argv):
-    app = Application()
-    app.prepareInput()
-    #app.runBlocking()
-    appProcess = app.run() 
-    appProcess.wait()
-    
-    sys.exit()
-    
-
-if __name__ == '__main__':
-    main(main(sys.argv[1:]))
 
 
