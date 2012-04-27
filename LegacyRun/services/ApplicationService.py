@@ -17,8 +17,8 @@ from ApplicationRun import AppState
 urls = (
     '/apprun', 'runner',
     '/apprun/output', 'appoutput',
-    '/apprun/error', 'apperror'
-#    '/(\w+)', 'handleApplication',
+    '/apprun/error', 'apperror',
+    '/apprun/stream/([A-Za-z0-9_.\-]+)', 'streamer'
 #    '/(\w+)/(\d+)', 'handleInstance',
 #    '/(\w+)/(\d+)/input', 'inputData',
 #    '/(\w+)/(\d+)/output', 'outputData'
@@ -50,9 +50,13 @@ class runner:
         
         infilelist = appConfig.get("inputFiles")
         outfilelist = appConfig.get("outputFiles")
+        streamfilelist = appConfig.get("streamedOutput")
+        paramslist = appConfig.get("applicationSpecificParameters")
         
         app.setInputData(self.list2dic(infilelist))
         app.setOutputData(self.list2dic(outfilelist))
+        app.setParams(self.list2dic(paramslist))
+        app.setStreamedOutput(self.list2dic(streamfilelist))
         
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
@@ -89,7 +93,7 @@ class appoutput:
         web.header('Content-type','text/plain')
         #web.header('Transfer-Encoding','chunked') 
         if app.getState() == AppState.INIT or app.getState() == AppState.PROLOG or app.getState() == AppState.READY:
-            yield "File not ready for output"
+            yield "No standard output available yet\n"
         else:
             try:
                 f = open("/tmp/app-stdout.txt","r")
@@ -101,7 +105,7 @@ class appoutput:
                     else:
                         time.sleep(5)
             except: 
-                yield "Output not available"
+                yield "Standard output not available\n"
                 
 class apperror:
     def GET(self):
@@ -109,7 +113,7 @@ class apperror:
         web.header('Content-type','text/plain')
         #web.header('Transfer-Encoding','chunked') 
         if app.getState() == AppState.INIT or app.getState() == AppState.PROLOG or app.getState() == AppState.READY:
-            yield "File not ready for error"
+            yield "No standard error available yet\n"
         else:
             try:
                 f = open("/tmp/app-stderr.txt","r")
@@ -121,7 +125,29 @@ class apperror:
                     else:
                         time.sleep(5)
             except: 
-                yield "Error not available"
+                yield "Standard error not available\n"
+                
+class streamer:
+    def GET(self, filename):
+        web.header('Content-type','text/plain')
+
+        if app.getState() != AppState.RUNNING or app.getState() != AppState.DONE  or app.getState()!=AppState.CLEARED:
+            yield "Data not ready for streaming." + "\n"
+        else:
+            if filename not in app.getStreamedOutput():
+                yield "Data not in declared streamed output list" + "\n"
+            else:
+                try:
+                    f = open(filename,"r")
+                    eof = False
+                    while not eof:
+                        line = f.readline()
+                        if line!='':
+                            yield line
+                        else:
+                            time.sleep(5)
+                except: 
+                    yield "Error streaming requested output \n"
             
 
 if __name__ == "__main__":

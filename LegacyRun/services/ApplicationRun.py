@@ -7,7 +7,6 @@ Created on 17 Apr 2012
 __author__ = 'vangelis'
 
 import subprocess
-import sys
 import os
 import threading
 import socket
@@ -32,7 +31,7 @@ class Application:
 
     username = 'guest'
     password = 'guest'
-
+ 
     amqp = {
         'host' : 'dev.rabbitmq.com',
         'port' : 5672,
@@ -40,6 +39,16 @@ class Application:
         'credentials' : pika.PlainCredentials(username, password)
     }
 
+#    username = 'system'
+#    password = 'manager'
+#
+#    amqp = {
+#        'host' : 'localhost',
+#        'port' : 61613,
+#        'virtual_host' : '/',
+#        'credentials' : pika.PlainCredentials(username, password)
+#    }
+    
     def __init__(self):
         self.queue = 'lr.'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
@@ -49,6 +58,8 @@ class Application:
         self.monitorThread= None
         self.inputData = None
         self.outputData = None
+        self.params = None
+        self.streamedData = None
         self.stdout = None
         self.stderr = None
         print "Initializing..."
@@ -57,19 +68,23 @@ class Application:
 
     def initQueue(self):
     # Connect to RabbitMQ
-        parameters = pika.ConnectionParameters(**self.amqp)
-        connection = BlockingConnection(parameters)
+        try:
+            parameters = pika.ConnectionParameters(**self.amqp)
+            connection = BlockingConnection(parameters)
+            
+            # Open the channel
+            channel = connection.channel()
+            
+            # Declare the queue
+            channel.queue_declare(queue=self.queue,
+                                  durable=False,
+                                  exclusive=False,
+                                  auto_delete=True)
         
-        # Open the channel
-        channel = connection.channel()
-        
-        # Declare the queue
-        channel.queue_declare(queue=self.queue,
-                              durable=False,
-                              exclusive=False,
-                              auto_delete=True)
-    
-        print 'Sending notifications to queue: %s' % self.queue
+            print 'Sending notifications to queue: %s' % self.queue
+        except:
+            print 'No notifications queue could be activated'
+            channel = connection = None
 
         return (channel, connection)
     
@@ -80,18 +95,25 @@ class Application:
 
 
     def sendNotification(self, msgBody):
-        self.channel.basic_publish(exchange='',
-                  routing_key=self.queue,
-                  body=msgBody,
-                  properties=pika.BasicProperties(
-                      content_type="text/plain",
-                      delivery_mode=1))
+        if self.channel is not None:
+            self.channel.basic_publish(exchange='',
+                      routing_key=self.queue,
+                      body=msgBody,
+                      properties=pika.BasicProperties(
+                          content_type="text/plain",
+                          delivery_mode=1))
 
     
     def run(self):
         if self.applicationName is not None and self.getState() == AppState.READY:
+            # Prepare shell environment
+            self.prepareEnvironment()
+            
+            # Prepare stdout and stderr redirections
             self.stdout = open("/tmp/app-stdout.txt", "w+")
             self.stderr = open("/tmp/app-stderr.txt", "w+")
+            
+            # Start the process
             gocommand = self.environment + self.applicationName
             self.process = subprocess.Popen(gocommand, stdout=self.stdout, stderr=self.stderr)
             self.setState(AppState.RUNNING)
@@ -154,6 +176,15 @@ class Application:
     def setOutputData(self, dataref):
         self.outputData = dataref
         
+    def setParams(self, paramsList):
+        self.params = paramsList
+        
+    def setStreamedOutput(self, streamedlist):
+        self.streamedData = streamedlist
+        
+    def getStreamedOutput(self):
+        return self.streamedData
+    
     def monitor(self):
         self.process.wait()
         exitcode = self.process.returncode
@@ -163,8 +194,13 @@ class Application:
             self.stageOutput()
         else:
             print "Exit code " + str(exitcode)
-            print "Abnormal program termination. Output will not be staged"
+            print "Unexpected program termination. Output will not be staged"
             self.setState(AppState.FAILED)
         
+    def prepareEnvironment(self):
+        if self.params is not None:
+            for parameter in self.params.keys():
+                os.environ[parameter]=self.params[parameter]
+                
 
 
