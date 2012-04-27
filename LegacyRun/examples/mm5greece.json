@@ -1,6 +1,7 @@
 {
  	"application": {
 		"name":"MM5",
+		
 		"inputFiles": [
 			{"TERRAIN_DOMAIN1":"https://pithos.okeanos.grnet.gr/public/c57vn"},
 			{"namelist_regrid.input":"https://pithos.okeanos.grnet.gr/public/rtq5j"},
@@ -8,6 +9,7 @@
 			{"LANDUSE.TBL":"https://pithos.okeanos.grnet.gr/public/whc88"},
 			{"mmlif.input":"https://pithos.okeanos.grnet.gr/public/jvcqq"}
 		  ],
+		  
 		"outputFiles": [
 			{"MMOUT_DOMAIN1_00":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"},
 			{"MMOUT_DOMAIN1_01":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}, 
@@ -52,6 +54,24 @@
 			{"MMOUT_DOMAIN1_34":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}, 
 			{"MMOUT_DOMAIN1_35":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}, 
 			{"MMOUT_DOMAIN1_36":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/LEGACYRUN_DATA_REPO/MM5_DATA/OUT_DOMAIN1"}
+		],
+		
+		"streamedOutput": [
+			{"rsl.out.0000":"None"},
+			{"rsl.error.0000":"None"}
+		],
+		
+		"applicationSpecificParameters" : [
+			{"NOMADSERVER":"nomads.ncep.noaa.gov"},
+			{"URLVARIABLES":"var_HGT=on&var_UGRD=on&var_VGRD=on&var_TMP=on&var_RH=on&var_PRMSL=on&var_PRES=on&subregion=&leftlon=-30&rightlon=60&toplat=70&bottomlat=20"},
+			{"TMPLEVELS":"(:TMP:1000|:TMP:950|:TMP:950|:TMP:900|:TMP:850|:TMP:800|:TMP:750|:TMP:700|:TMP:650|:TMP:600|:TMP:550|:TMP:500|:TMP:450|:TMP:400|:TMP:350|:TMP:300|:TMP:250|:TMP:200|:TMP:150|:TMP:100 )"},
+			{"HGTLEVELS":"(:HGT:1000|:HGT:950|:HGT:950|:HGT:900|:HGT:850|:HGT:800|:HGT:750|:HGT:700|:HGT:650|:HGT:600|:HGT:550|:HGT:500|:HGT:450|:HGT:400|:HGT:350|:HGT:300|:HGT:250|:HGT:200|:HGT:150|:HGT:100 )"},
+			{"UGRDLEVELS":"(:UGRD:1000|:UGRD:950|:UGRD:950|:UGRD:900|:UGRD:850|:UGRD:800|:UGRD:750|:UGRD:700|:UGRD:650|:UGRD:600|:UGRD:550|:UGRD:500|:UGRD:450|:UGRD:400|:UGRD:350|:UGRD:300|:UGRD:250|:UGRD:200|:UGRD:150|:UGRD:100 )"},
+			{"VGRDLEVELS":"(:VGRD:1000|:VGRD:950|:VGRD:950|:VGRD:900|:VGRD:850|:VGRD:800|:VGRD:750|:VGRD:700|:VGRD:650|:VGRD:600|:VGRD:550|:VGRD:500|:VGRD:450|:VGRD:400|:VGRD:350|:VGRD:300|:VGRD:250|:VGRD:200|:VGRD:150|:VGRD:100 )"},
+			{"RHLEVELS":"(:RH:1000|:RH:950|:RH:950|:RH:900|:RH:850|:RH:800|:RH:750|:RH:700|:RH:650|:RH:600|:RH:550|:RH:500|:RH:450|:RH:400|:RH:350|:RH:300|:RH:250|:RH:200|:RH:150|:RH:100 )"},
+			{"PRMSL":"(:PRMSL:mean )"},
+			{"TMP":"(:TMP:surface)"},
+			{"FORECASTDAYS":"3"}
 		]
 	}	
 }
