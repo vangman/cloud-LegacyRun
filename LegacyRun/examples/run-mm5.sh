@@ -16,7 +16,7 @@ listhours=`seq -w 00 06 72`
 ### Get data from NOMADS server
 for hour in $listhours;
 do
-	wget -O GRIB$hour "http://$NOMADSERVER/cgi-bin/filter_gfs.pl?file=gfs.t00z.pgrbf$hour.grib2&var_HGT=on&var_UGRD=on&var_VGRD=on&var_TMP=on&var_RH=on&var_PRMSL=on&var_PRES=on&subregion=&leftlon=-30&rightlon=60&toplat=70&bottomlat=20&dir=%2Fgfs.$datetod"
+	wget -O GRIB$hour "http://$NOMADSERVER/cgi-bin/filter_gfs.pl?file=gfs.t00z.pgrbf$hour.grib2&$URLVARIABLES&dir=%2Fgfs.$datetod"
 	sleep 15
 done
 
@@ -32,13 +32,13 @@ for hour in $listhours;
 for hour in $listhours;
 	do
 		wgrib2  -vt GRIB$hour  >validtime_$hour
-		wgrib2 GRIB$hour |egrep '$TMPLEVELS'| wgrib2 -i GRIB$hour  -text tmp_$hour
-		wgrib2 GRIB$hour |egrep '$HGTLEVELS'| wgrib2 -i GRIB$hour  -text hgt_$hour
-		wgrib2 GRIB$hour |egrep '$UGRDLEVELS'| wgrib2 -i GRIB$hour  -text ugrd_$hour
-		wgrib2 GRIB$hour |egrep '$VGRDLEVELS'| wgrib2 -i GRIB$hour  -text vgrd_$hour
-		wgrib2 GRIB$hour |egrep '$RHLEVELS'| wgrib2 -i GRIB$hour  -text rh_$hour
-		wgrib2 GRIB$hour |egrep '$PRMSL'| wgrib2 -i GRIB$hour  -text msl_$hour
-		wgrib2 GRIB$hour |egrep '$TMP'| wgrib2 -i GRIB$hour  -text sst_$hour
+		wgrib2 GRIB$hour |egrep "$TMPLEVELS"| wgrib2 -i GRIB$hour  -text tmp_$hour
+		wgrib2 GRIB$hour |egrep "$HGTLEVELS"| wgrib2 -i GRIB$hour  -text hgt_$hour
+		wgrib2 GRIB$hour |egrep "$UGRDLEVELS"| wgrib2 -i GRIB$hour  -text ugrd_$hour
+		wgrib2 GRIB$hour |egrep "$VGRDLEVELS"| wgrib2 -i GRIB$hour  -text vgrd_$hour
+		wgrib2 GRIB$hour |egrep "$RHLEVELS"| wgrib2 -i GRIB$hour  -text rh_$hour
+		wgrib2 GRIB$hour |egrep "$PRMSL"| wgrib2 -i GRIB$hour  -text msl_$hour
+		wgrib2 GRIB$hour |egrep "$TMPSST"| wgrib2 -i GRIB$hour  -text sst_$hour
 
 		ln -fs  tmp_$hour fort.10
 		ln -fs  hgt_$hour fort.11
