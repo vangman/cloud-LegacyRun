@@ -131,7 +131,7 @@ class streamer:
     def GET(self, filename):
         web.header('Content-type','text/plain')
 
-        if app.getState() != AppState.RUNNING or app.getState() != AppState.DONE  or app.getState()!=AppState.CLEARED:
+        if app.getState() != AppState.RUNNING and app.getState() != AppState.DONE and app.getState()!=AppState.CLEARED:
             yield "Data not ready for streaming." + "\n"
         else:
             if filename not in app.getStreamedOutput():
