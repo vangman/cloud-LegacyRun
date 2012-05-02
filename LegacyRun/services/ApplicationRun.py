@@ -29,25 +29,15 @@ class AppState:
 class Application:
     
 
-    username = 'guest'
-    password = 'guest'
+    username = 'vangelis'
+    password = 'verifym9'
  
     amqp = {
-        'host' : 'dev.rabbitmq.com',
+        'host' : 'vm035.grnet.stratuslab.eu',
         'port' : 5672,
         'virtual_host' : '/',
         'credentials' : pika.PlainCredentials(username, password)
     }
-
-#    username = 'system'
-#    password = 'manager'
-#
-#    amqp = {
-#        'host' : 'localhost',
-#        'port' : 61613,
-#        'virtual_host' : '/',
-#        'credentials' : pika.PlainCredentials(username, password)
-#    }
     
     def __init__(self):
         self.queue = 'lr.'+socket.gethostname()
@@ -82,8 +72,9 @@ class Application:
                                   auto_delete=True)
         
             print 'Sending notifications to queue: %s' % self.queue
-        except:
+        except Exception as exc:
             print 'No notifications queue could be activated'
+            print exc
             channel = connection = None
 
         return (channel, connection)
