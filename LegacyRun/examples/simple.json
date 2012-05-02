@@ -5,6 +5,10 @@
 		  ],
 		"outputFiles": [
 			{"output.txt":"https://pithos.okeanos.grnet.gr/v1/efloros@grnet.gr/pithos/StratusLab/demos"}
+		],
+		"streamedOutput": [
+		],
+		"applicationSpecificParameters" : [
 		]
 	}	
 }
