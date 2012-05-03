@@ -15,16 +15,17 @@ import pika
 from pika.adapters import BlockingConnection
 
 class AppState:
-    READY = "READY"
-    INIT = "INIT" 
-    RUNNING = "RUNNING"
-    PROLOG = "PROLOG"
-    SUSPENDED = "SUSPENDED"
-    FAILED = "FAILED"
-    KILLED = "KILLED"
-    DONE = "DONE"
-    CLEARED = "CLEARED"
-    EPILOGUE = "EPILOGUE"
+    READY = "READY" # Input data staged in and application is ready to run
+    INIT = "INIT"  # Application is in initialization phase
+    PRIMED = "PRIMED" # Application has been provided all configuration and data dependency information 
+    RUNNING = "RUNNING" # Application is running
+    PROLOG = "PROLOG" # Input data are being staged locally from the source location
+    SUSPENDED = "SUSPENDED" # Application is suspended
+    FAILED = "FAILED" # Application failed 
+    KILLED = "KILLED" # Application was killed by user intervention 
+    DONE = "DONE" # Application has completed
+    CLEARED = "CLEARED" # Output data has been staged out to external storage
+    EPILOGUE = "EPILOGUE" # Output data is being staged to external storage
 
 class Application:
     
@@ -40,10 +41,11 @@ class Application:
     }
     
     def __init__(self):
-        self.queue = 'lr.'+socket.gethostname()
+        self.queue = 'lr-'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
         self.applicationName = "run.sh"
         self.environment = ""
+        self.step = 0
         self.process = None
         self.monitorThread= None
         self.inputData = None
@@ -192,6 +194,17 @@ class Application:
         if self.params is not None:
             for parameter in self.params.keys():
                 os.environ[parameter]=self.params[parameter]
+                
+    def increaseStep(self):
+        self.step += 1
+        
+    def resetStep(self):
+        self.step=0
+        
+    def getStep(self):
+        return self.step
+        
+    
                 
 
 
