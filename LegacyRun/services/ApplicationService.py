@@ -9,6 +9,7 @@ __author__ = 'vangelis'
 import web
 import json
 import os
+import time
 
 import Utility
 
@@ -20,9 +21,6 @@ urls = (
     '/apprun/output', 'appoutput',
     '/apprun/error', 'apperror',
     '/apprun/stream/([A-Za-z0-9_.\-]+)', 'streamer'
-#    '/(\w+)/(\d+)', 'handleInstance',
-#    '/(\w+)/(\d+)/input', 'inputData',
-#    '/(\w+)/(\d+)/output', 'outputData'
     )
 
 app = Application()
@@ -35,7 +33,7 @@ class runner:
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
 
-    def PUT(self):
+    def PUT(self):        
         # Retrieve and set the storage access options
         objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
         storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
@@ -58,6 +56,8 @@ class runner:
         app.setOutputData(Utility.list2dic(outfilelist))
         app.setParams(Utility.list2dic(paramslist))
         app.setStreamedOutput(Utility.list2dic(streamfilelist))
+        
+        app.setState(AppState.PRIMED)
         
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
@@ -82,7 +82,7 @@ class runner:
     
 
 class appoutput:
-    def GET(self):
+    def GET(self):       
         # These headers make it work in browsers
         web.header('Content-type','text/plain')
         
@@ -90,12 +90,19 @@ class appoutput:
             yield "No standard output available yet\n"
         else:
             try:
-                Utility.webStream("/tmp/app-stdout.txt", 5)
+                f = open("/tmp/app-stdout.txt","r")
+                eof = False
+                while not eof:
+                    line = f.readline()
+                    if line!='':
+                        yield line
+                    else:
+                        time.sleep(5)
             except: 
                 yield "Standard output not available\n"
                 
 class apperror:
-    def GET(self):
+    def GET(self):      
         # These headers make it work in browsers
         web.header('Content-type','text/plain')
         
@@ -103,12 +110,20 @@ class apperror:
             yield "No standard error available yet\n"
         else:
             try:
-                Utility.webStream("/tmp/app-stderr.txt", 5)
+                f = open("/tmp/app-stderr.txt","r")
+                eof = False
+                while not eof:
+                    line = f.readline()
+                    if line!='':
+                        yield line
+                    else:
+                        time.sleep(5)
             except: 
                 yield "Standard error not available\n"
+
                 
 class streamer:
-    def GET(self, filename):
+    def GET(self, filename):      
         web.header('Content-type','text/plain')
         
         if app.getState() != AppState.RUNNING and app.getState() != AppState.DONE and app.getState()!=AppState.CLEARED:
@@ -118,7 +133,14 @@ class streamer:
                 yield "Data not in declared streamed output list" + "\n"
             else:
                 try:
-                    Utility.webStream(filename, 5)
+                    f = open(filename,"r")
+                    eof = False
+                    while not eof:
+                        line = f.readline()
+                        if line!='':
+                            yield line
+                        else:
+                            time.sleep(5)
                 except: 
                     yield "Error streaming requested output \n"
             
