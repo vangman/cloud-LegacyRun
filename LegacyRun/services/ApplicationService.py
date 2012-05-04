@@ -35,9 +35,21 @@ class runner:
 
     def PUT(self):        
         # Retrieve and set the storage access options
-        objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
-        storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
+        try:
+            objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
+        except KeyError:
+            # Default object storage if none is defined is Pithos+
+            objectStorage = "pithos+"
         
+        if objectStorage == "pithos+":
+            try:
+                storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
+            except KeyError:
+                return "Required header STORAGE_TOKEN is needed for storage " + objectStorage + "\n"
+        else:
+            return "None supported object storage provided" + "\n"
+                
+            
         app.setStorageOptions(objectStorage, storageToken)
         
         # Retrieve and set the input/output endpoints
@@ -63,14 +75,23 @@ class runner:
         return json.dumps(msg) + "\n"
 
     def POST(self):
-        #msg = {}
-        #body = web.data()
-        #decoder = json.JSONDecoder()
-        #msg = decoder.decode(body)
-        #print msg.get("applicationPath")
-        app.prepareInput()
-        
-        app.run() 
+        try:
+            action = web.ctx.env['HTTP_ACTION']
+        except KeyError:
+            action = None
+
+        if action==None or action=="RUN":
+            app.prepareInput()
+            app.run()
+            
+        elif action=="RESET":
+            print "Not implemented"
+            
+        elif action=="SUSPEND":
+            print "Not implemented"
+            
+        else:
+            print "No valid action clause provided"
             
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
