@@ -11,6 +11,7 @@ import os
 import threading
 import socket
 import traceback
+import json
 
 import pika
 from pika.adapters import BlockingConnection
@@ -82,6 +83,10 @@ class Application:
 
         return (channel, connection)
     
+    def build_json_notification(self, msg):
+        msg = {"NAME":self.applicationName, "STEP": self.getStep(), "STATE": self.getState(), "TAG": msg}
+        return json.dumps(msg)
+    
     def setStorageOptions(self, storageType, storageToken):
         # Actually only pithos is supported at this time
         self.storageType = storageType
@@ -110,6 +115,8 @@ class Application:
             # Start the process
             gocommand = self.environment + self.applicationName
             self.process = subprocess.Popen(gocommand, stdout=self.stdout, stderr=self.stderr)
+            
+            self.increaseStep()
             self.setState(AppState.RUNNING)
             
             # Start the monitoring thread
@@ -154,7 +161,9 @@ class Application:
 
     def setState(self, newState):
         self.state = newState
-        self.sendNotification(self.state)
+        notification = self.build_json_notification("STATE CHANGE")
+        self.sendNotification(notification)
+        
 
     def kill(self):
         if self.process is not None:
