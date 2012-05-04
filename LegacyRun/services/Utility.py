@@ -7,7 +7,7 @@ Utility funcions used by other modules
 '''
 
     
-def list2dic(self, inlist):
+def list2dic(inlist):
     outdic = {}
     for itemdic in inlist:
         for (key, value) in itemdic.iteritems():

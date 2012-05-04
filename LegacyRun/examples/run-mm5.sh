@@ -69,7 +69,7 @@ EOF
 	d1=`date +%d`
 	y1=`date +%Y`
 	
-	# End forecast day (3 days ahead in the future)
+	# End forecast day (FORECASTDAYS days ahead in the future)
 	ey=$(date --date "$today + $FORECASTDAYS days" +%Y)
 	em=$(date --date "$today + $FORECASTDAYS days" +%m)
 	ed=$(date --date "$today + $FORECASTDAYS days" +%d)
@@ -82,7 +82,7 @@ EOF
 	sed -e "s/EMONTH/$em/" | \
 	sed -e "s/EDAY/$ed/"> namelist.input
 
-    ### Run binary
+    ### Re-grid
 	regridder
 
    	# Prepare namelist input
@@ -93,7 +93,7 @@ EOF
 	sed -e "s/EMONTH/$em/" | \
 	sed -e "s/EDAY/$ed/" > namelist.input
 
-    ### Run binary
+    ### Interpolate
 	interpf
 
 	sed -e "s/LIFY/$y1/" mmlif.input | \
@@ -102,7 +102,7 @@ EOF
 
 	ln -s $BIN_EXEC mm5
 
-    ### Run the binary
+    ### Run the model
 	mpirun -machinefile /tmp/machinefile  -np $STRATUSLAB_CMAX_CORES ./mm5
 
     ### Post-process 

@@ -10,6 +10,7 @@ import subprocess
 import os
 import threading
 import socket
+import traceback
 
 import pika
 from pika.adapters import BlockingConnection
@@ -74,9 +75,9 @@ class Application:
                                   auto_delete=True)
         
             print 'Sending notifications to queue: %s' % self.queue
-        except Exception as exc:
+        except Exception:
             print 'No notifications queue could be activated'
-            print exc
+            traceback.print_tb()
             channel = connection = None
 
         return (channel, connection)
@@ -128,7 +129,7 @@ class Application:
             self.setState(AppState.DONE)
 
     def prepareInput(self):
-        if self.getState() == AppState.INIT:
+        if self.getState() == AppState.PRIMED:
             self.setState(AppState.PROLOG)
             for inputFile in self.inputData.keys():
                 print "Downloading " + self.inputData[inputFile]
