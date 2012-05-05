@@ -30,6 +30,10 @@ class AppState:
     CLEARED = "CLEARED" # Output data has been staged out to external storage
     EPILOGUE = "EPILOGUE" # Output data is being staged to external storage
 
+class AppHooks:
+    RUN = "__lr_run"
+    CLEAR = "__lr_clear"
+    
 class Application:
     
     # Message broker information should be defined on instantiation. Should the user be able to alter this during
@@ -50,8 +54,6 @@ class Application:
         #self.queue = 'lr-'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
         
-        self.applicationName = "run.sh"
-        self.environment = ""
         self.step = 0
         self.process = None
         self.monitorThread= None
@@ -61,6 +63,7 @@ class Application:
         self.streamedData = None
         self.stdout = None
         self.stderr = None
+        
         print "Initializing..."
         self.setState(AppState.INIT)
 
@@ -89,7 +92,7 @@ class Application:
         return (channel, connection)
     
     def build_json_notification(self, msg):
-        msg = {"NAME":self.applicationName, "STEP": self.getStep(), "STATE": self.getState(), "TAG": msg}
+        msg = {"STEP": self.getStep(), "STATE": self.getState(), "TAG": msg}
         return json.dumps(msg)
     
     def setStorageOptions(self, storageType, storageToken):
@@ -109,7 +112,7 @@ class Application:
 
     
     def run(self):
-        if self.applicationName is not None and self.getState() == AppState.READY:
+        if self.getState() == AppState.READY:
             # Prepare shell environment
             self.prepareEnvironment()
             
@@ -118,8 +121,7 @@ class Application:
             self.stderr = open("/tmp/app-stderr.txt", "w+")
             
             # Start the process
-            gocommand = self.environment + self.applicationName
-            self.process = subprocess.Popen(gocommand, stdout=self.stdout, stderr=self.stderr)
+            self.process = subprocess.Popen(AppHooks.RUN, stdout=self.stdout, stderr=self.stderr)
             
             self.increaseStep()
             self.setState(AppState.RUNNING)
@@ -133,12 +135,15 @@ class Application:
             return None
 
     def runBlocking(self):
-        if self.getState() == AppState.INIT:
-            if self.applicationName is not None:
-                gocommand = self.environment + self.applicationName
+        if self.getState() == AppState.READY:
+            try:
                 self.setState(AppState.RUNNING)
-                os.system(gocommand)
-            self.setState(AppState.DONE)
+                os.system(AppHooks.RUN)
+                self.setState(AppState.DONE)
+            except:
+                print "WARNING: Run hook could not be found"
+                self.setState(AppState.READY)
+            
 
     def prepareInput(self):
         if self.getState() == AppState.PRIMED:
@@ -201,7 +206,7 @@ class Application:
             self.__init__()
             # execute the clear() hook
             try:
-                os.system("__lr_clear")
+                os.system(AppHooks.CLEAR)
             except:
                 print "WARNING: No local clear hook available"
         
