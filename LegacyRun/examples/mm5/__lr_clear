@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rm -rf tmp_* hgt_* ugrd_* vgrd_* rh_* msl_* sst_* validtime_* OUTPUT* fort.* NCE\:2012-0* REGRID_DOMAIN1 MMINPUT_DOMAIN1 mm5 LOWBDY_DOMAIN1 BDYOUT_DOMAIN1
