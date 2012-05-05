@@ -105,9 +105,5 @@ EOF
     ### Run the model
 	mpirun -machinefile /tmp/machinefile  -np $STRATUSLAB_CMAX_CORES ./mm5
 
-    ### Post-process 
-
-    ### Store in data repository
-
 fi
 
