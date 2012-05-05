@@ -7,6 +7,7 @@ Created on 17 Apr 2012
 __author__ = 'vangelis'
 
 import subprocess
+import signal
 import os
 import threading
 import socket
@@ -24,14 +25,15 @@ class AppState:
     PROLOG = "PROLOG" # Input data are being staged locally from the source location
     SUSPENDED = "SUSPENDED" # Application is suspended
     FAILED = "FAILED" # Application failed 
-    KILLED = "KILLED" # Application was killed by user intervention 
+    ABORTED = "ABORTED" # Application was terminated after user intervention 
     DONE = "DONE" # Application has completed
     CLEARED = "CLEARED" # Output data has been staged out to external storage
     EPILOGUE = "EPILOGUE" # Output data is being staged to external storage
 
 class Application:
     
-
+    # Message broker information should be defined on instantiation. Should the user be able to alter this during
+    # execution time?
     username = 'vangelis'
     password = 'verifym9'
  
@@ -42,9 +44,12 @@ class Application:
         'credentials' : pika.PlainCredentials(username, password)
     }
     
+    queue = 'lr-'+socket.gethostname()
+    
     def __init__(self):
-        self.queue = 'lr-'+socket.gethostname()
+        #self.queue = 'lr-'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
+        
         self.applicationName = "run.sh"
         self.environment = ""
         self.step = 0
@@ -166,13 +171,40 @@ class Application:
         
 
     def kill(self):
-        if self.process is not None:
+        if self.process is not None and self.getState()==AppState.RUNNING:
             self.process.kill()
-            self.setState(AppState.KILLED)
+            self.setState(AppState.ABORTED)
             return True
         else:
             return False
 
+    def terminate(self):
+        if self.process is not None and self.getState()==AppState.RUNNING:
+            self.process.terminate()
+            self.setState(AppState.ABORTED)
+            return True
+        else:
+            return False
+        
+    def suspend(self):
+        if self.process is not None and self.getState()==AppState.RUNNING:
+            self.process.send_signal(signal.SIGSTOP)
+            self.setState(AppState.SUSPENDED)
+            
+    def resume(self):
+        if self.process is not None and self.getState()==AppState.SUSPENDED:
+            self.process.send_signal(signal.SIGCONT)
+            self.setState(AppState.RUNNING)
+            
+    def reset(self):
+        if self.getState()==AppState.SUSPENDED or self.getState()==AppState.ABORTED or self.getState()==AppState.FAILED or self.getState()==AppState.CLEARED:
+            self.__init__()
+            # execute the clear() hook
+            try:
+                os.system("__lr_clear")
+            except:
+                print "WARNING: No local clear hook available"
+        
     def setInputData(self, dataref):
         self.inputData = dataref
 
@@ -196,9 +228,12 @@ class Application:
             self.setState(AppState.DONE)
             self.stageOutput()
         else:
-            print "Exit code " + str(exitcode)
-            print "Unexpected program termination. Output will not be staged"
-            self.setState(AppState.FAILED)
+            if self.getState()!=AppState.KILLED:
+                print "Exit code " + str(exitcode)
+                print "Unexpected program termination. Output will not be staged"
+                self.setState(AppState.FAILED)
+            else:
+                print "Terminated by User"
         
     def prepareEnvironment(self):
         if self.params is not None:

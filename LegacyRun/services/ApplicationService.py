@@ -85,10 +85,13 @@ class runner:
             app.run()
             
         elif action=="RESET":
-            print "Not implemented"
+            app.reset()
             
         elif action=="SUSPEND":
-            print "Not implemented"
+            app.suspend()
+            
+        elif action=="RESUME":
+            app.resume()
             
         else:
             print "No valid action clause provided"
