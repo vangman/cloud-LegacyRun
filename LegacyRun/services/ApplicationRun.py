@@ -233,7 +233,7 @@ class Application:
             self.setState(AppState.DONE)
             self.stageOutput()
         else:
-            if self.getState()!=AppState.KILLED:
+            if self.getState()!=AppState.ABORTED:
                 print "Exit code " + str(exitcode)
                 print "Unexpected program termination. Output will not be staged"
                 self.setState(AppState.FAILED)
