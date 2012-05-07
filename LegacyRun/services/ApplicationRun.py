@@ -33,6 +33,8 @@ class AppState:
 class AppHooks:
     RUN = "__lr_run"
     CLEAR = "__lr_clear"
+    FAILED = "__lr_failed"
+    ABORT = "__lr_aborted"
     
 class Application:
     
