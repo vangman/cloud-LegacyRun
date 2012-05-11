@@ -20,7 +20,8 @@ urls = (
     '/apprun', 'runner',
     '/apprun/output', 'appoutput',
     '/apprun/error', 'apperror',
-    '/apprun/stream/([A-Za-z0-9_.\-]+)', 'streamer'
+    '/apprun/stream/([A-Za-z0-9_.\-]+)', 'streamer',
+    '/apprun/myself', 'myself'
     )
 
 app = Application()
@@ -167,6 +168,31 @@ class streamer:
                             time.sleep(5)
                 except: 
                     yield "Error streaming requested output \n"
+                    
+class myself:
+    '''
+    Self methods should invoked only from inside the host itself
+    '''
+    def POST(self):
+        if web.ctx.env['REMOTE_ADDR']!="127.0.0.1":
+            msg = {"Result":"Only local application can call this method"}
+            return json.dumps(msg) + '\n'
+            
+        try:
+            action = web.ctx.env['HTTP_ACTION']
+        except KeyError:
+            action = None
+            
+        if action==None or action=="NEXTSTEP":
+            if app.getState==AppState.RUNNING:
+                app.increaseStep()
+                msg = {"Result": "Success"}
+            else:
+                msg = {"Result": "Not in running state"}
+        else:
+            msg = {"Result": "Fail"}
+        
+        return json.dumps(msg) + "\n"
             
 
 if __name__ == "__main__":

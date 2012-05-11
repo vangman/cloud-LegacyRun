@@ -248,7 +248,8 @@ class Application:
                 os.environ[parameter]=self.params[parameter]
                 
     def increaseStep(self):
-        self.step += 1
+        if self.getState()==AppState.RUNNING:
+            self.step += 1
         
     def resetStep(self):
         self.step=0
