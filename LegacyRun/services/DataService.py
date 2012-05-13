@@ -12,7 +12,13 @@ urls = (
 
 class filemanager:
     def GET(self):
-        return "No data \n"
+        return "Not implemented\n"
+    
+    def PUT(self):
+        return "Not implemented\n"
+    
+    def DELETE(self):
+        return "Not implemented\n"
     
 if __name__ == "__main__":
     webapp = web.application(urls, globals())
