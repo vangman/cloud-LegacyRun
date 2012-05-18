@@ -21,7 +21,10 @@ urls = (
     '/apprun/output', 'appoutput',
     '/apprun/error', 'apperror',
     '/apprun/stream/([A-Za-z0-9_.\-]+)', 'streamer',
-    '/apprun/myself', 'myself'
+    '/apprun/myself', 'myself',
+    '/apprun/info', 'appinfo',
+    '/apprun/profiler', 'profiler',
+    '/apprun/parameters', 'parameters'
     )
 
 app = Application()
@@ -34,47 +37,7 @@ class runner:
         msg = {"State": app.getState()}
         return json.dumps(msg) + "\n"
 
-    def PUT(self):        
-        # Retrieve and set the storage access options
-        try:
-            objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
-        except KeyError:
-            # Default object storage if none is defined is Pithos+
-            objectStorage = "pithos+"
-        
-        if objectStorage == "pithos+":
-            try:
-                storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
-            except KeyError:
-                return "Required header STORAGE_TOKEN is needed for storage " + objectStorage + "\n"
-        else:
-            return "None supported object storage provided" + "\n"
-                
-            
-        app.setStorageOptions(objectStorage, storageToken)
-        
-        # Retrieve and set the input/output endpoints
-        body = web.data()
-        decoder = json.JSONDecoder()
-        param = decoder.decode(body)
-        
-        appConfig = param.get("application")
-        
-        infilelist = appConfig.get("inputFiles")
-        outfilelist = appConfig.get("outputFiles")
-        streamfilelist = appConfig.get("streamedOutput")
-        paramslist = appConfig.get("applicationSpecificParameters")
-        
-        app.setInputData(Utility.list2dic(infilelist))
-        app.setOutputData(Utility.list2dic(outfilelist))
-        app.setParams(Utility.list2dic(paramslist))
-        app.setStreamedOutput(Utility.list2dic(streamfilelist))
-        
-        app.setState(AppState.PRIMED)
-        
-        msg = {"State": app.getState()}
-        return json.dumps(msg) + "\n"
-
+    
     def POST(self):
         try:
             action = web.ctx.env['HTTP_ACTION']
@@ -193,6 +156,76 @@ class myself:
             msg = {"Result": "Fail"}
         
         return json.dumps(msg) + "\n"
+    
+class appinfo:
+    '''
+    Returns textual information about the application
+    '''
+    def GET(self):
+        msg = {"Application":"Application"}
+        return json.dumps(msg) + '\n'
+    
+class profiler:
+    '''
+    Returns performance information of a completed application run
+    '''
+    def GET(self):
+        msg = {"Performance":"Performance"}
+        return json.dumps(msg) + '\n'
+    
+class parameters:
+    '''
+    Handles the application runtime parameters resource
+    '''
+    def PUT(self):        
+        # Retrieve and set the storage access options
+        try:
+            objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
+        except KeyError:
+            # Default object storage if none is defined is Pithos+
+            objectStorage = "pithos+"
+        
+        if objectStorage == "pithos+":
+            try:
+                storageToken = web.ctx.env['HTTP_STORAGE_TOKEN']
+            except KeyError:
+                return "Required header STORAGE_TOKEN is needed for storage " + objectStorage + "\n"
+        else:
+            return "None supported object storage provided" + "\n"
+                
+            
+        app.setStorageOptions(objectStorage, storageToken)
+        
+        # Retrieve and set the input/output endpoints
+        body = web.data()
+        decoder = json.JSONDecoder()
+        param = decoder.decode(body)
+        
+        appConfig = param.get("application")
+        
+        infilelist = appConfig.get("inputFiles")
+        outfilelist = appConfig.get("outputFiles")
+        streamfilelist = appConfig.get("streamedOutput")
+        paramslist = appConfig.get("applicationSpecificParameters")
+        
+        app.setInputData(Utility.list2dic(infilelist))
+        app.setOutputData(Utility.list2dic(outfilelist))
+        app.setParams(Utility.list2dic(paramslist))
+        app.setStreamedOutput(Utility.list2dic(streamfilelist))
+        
+        app.setMetaConfiguration(param)
+        
+        app.setState(AppState.PRIMED)
+        
+        msg = {"State": app.getState()}
+        return json.dumps(msg) + "\n"
+
+    def GET(self):
+        return json.dumps(app.getMetaConfiguration(), sort_keys=True, indent=4) + "\n"
+    
+    def DELETE(self):
+        # We should be able to delete the parameters during PRIMED state and bring the application back to init state
+        return "Not implemented"
             
 
 if __name__ == "__main__":
