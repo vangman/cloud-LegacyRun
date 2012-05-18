@@ -66,6 +66,10 @@ class Application:
         self.stdout = None
         self.stderr = None
         
+        # Meta information
+        self.metaConfiguration = None
+
+        
         print "Initializing..."
         self.setState(AppState.INIT)
 
@@ -256,6 +260,12 @@ class Application:
         
     def getStep(self):
         return self.step
+    
+    def setMetaConfiguration(self, config):
+        self.metaConfiguration = config
+        
+    def getMetaConfiguration(self):
+        return self.metaConfiguration
         
     
                 
