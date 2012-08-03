@@ -44,7 +44,7 @@ class Application:
     password = 'verifym9'
  
     amqp = {
-        'host' : 'vm035.grnet.stratuslab.eu',
+        'host' : 'vm-217.lal.stratuslab.eu',
         'port' : 5672,
         'virtual_host' : '/',
         'credentials' : pika.PlainCredentials(username, password)
@@ -161,7 +161,7 @@ class Application:
             self.setState(AppState.READY)
             
     def stageOutput(self):
-        if self.getState() == AppState.DONE:
+        if self.getState() == AppState.DONE and self.storageToken is not None:
             self.setState(AppState.EPILOGUE)
             for outputFile in self.outputData.keys():
                 print "Uploading to object store " + outputFile
@@ -252,7 +252,7 @@ class Application:
                 os.environ[parameter]=self.params[parameter]
                 
     def increaseStep(self):
-        if self.getState()==AppState.RUNNING:
+        if self.getState()==AppState.RUNNING or self.getState()==AppState.READY:
             self.step += 1
         
     def resetStep(self):

@@ -183,7 +183,7 @@ class parameters:
             objectStorage = web.ctx.env['HTTP_OBJECT_STORAGE']
         except KeyError:
             # Default object storage if none is defined is Pithos+
-            objectStorage = "pithos+"
+            objectStorage = None
         
         if objectStorage == "pithos+":
             try:
@@ -191,8 +191,7 @@ class parameters:
             except KeyError:
                 return "Required header STORAGE_TOKEN is needed for storage " + objectStorage + "\n"
         else:
-            return "None supported object storage provided" + "\n"
-                
+            storageToken = None
             
         app.setStorageOptions(objectStorage, storageToken)
         
