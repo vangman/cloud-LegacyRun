@@ -13,6 +13,7 @@ import threading
 import socket
 import traceback
 import json
+import logging
 
 import pika
 from pika.adapters import BlockingConnection
@@ -35,27 +36,36 @@ class AppHooks:
     CLEAR = "__lr_clear"
     FAILED = "__lr_failed"
     ABORT = "__lr_aborted"
-    
+
+def singleton(cls):
+    instances = {}
+    def getinstance():
+        if cls not in instances:
+            instances[cls] = cls()
+        return instances[cls]
+    return getinstance
+
+@singleton
 class Application:
     
     # Message broker information should be defined on instantiation. Should the user be able to alter this during
     # execution time?
-    username = 'vangelis'
-    password = 'verifym9'
+    username = 'guest'
+    password = 'guest'
  
     amqp = {
-        'host' : 'vm-217.lal.stratuslab.eu',
+        'host' : 'dev.rabbitmq.com',
         'port' : 5672,
         'virtual_host' : '/',
         'credentials' : pika.PlainCredentials(username, password)
     }
     
     queue = 'lr-'+socket.gethostname()
-    
+
     def __init__(self):
         #self.queue = 'lr-'+socket.gethostname()
         (self.channel, self.connection) = self.initQueue()
-        
+
         self.step = 0
         self.process = None
         self.monitorThread= None
@@ -65,13 +75,15 @@ class Application:
         self.streamedData = None
         self.stdout = None
         self.stderr = None
-        
+
         # Meta information
         self.metaConfiguration = None
 
-        
+
         print "Initializing..."
         self.setState(AppState.INIT)
+        logging.info("Application Object Initialized")
+
 
 
     def initQueue(self):
@@ -106,7 +118,6 @@ class Application:
         self.storageType = storageType
         self.storageToken = storageToken
 
-
     def sendNotification(self, msgBody):
         if self.channel is not None:
             self.channel.basic_publish(exchange='',
@@ -116,27 +127,32 @@ class Application:
                           content_type="text/plain",
                           delivery_mode=1))
 
-    
     def run(self):
         if self.getState() == AppState.READY:
             # Prepare shell environment
             self.prepareEnvironment()
-            
+
             # Prepare stdout and stderr redirections
-            self.stdout = open("/tmp/app-stdout.txt", "w+")
-            self.stderr = open("/tmp/app-stderr.txt", "w+")
-            
-            # Start the process
-            self.process = subprocess.Popen(AppHooks.RUN, stdout=self.stdout, stderr=self.stderr)
-            
-            self.increaseStep()
-            self.setState(AppState.RUNNING)
-            
-            # Start the monitoring thread
-            self.monitorThread = threading.Thread(target=self.monitor, args=())
-            self.monitorThread.start()
-            
-            return self.process
+            self.stdout = open("/tmp/__stdout.log", "w+")
+            self.stderr = open("/tmp/__stderr.log", "w+")
+
+            try:
+                # Start the process
+                print os.getcwd()
+                self.process = subprocess.Popen(os.getcwd()+'/'+AppHooks.RUN, stdout=self.stdout, stderr=self.stderr)
+
+                self.increaseStep()
+                self.setState(AppState.RUNNING)
+
+                # Start the monitoring thread
+                self.monitorThread = threading.Thread(target=self.monitor, args=())
+                self.monitorThread.start()
+
+                return self.process
+            except:
+                print "WARNING: Run hook could not be found"
+                self.setState(AppState.FAILED)
+                return None
         else:
             return None
 
@@ -165,7 +181,7 @@ class Application:
             self.setState(AppState.EPILOGUE)
             for outputFile in self.outputData.keys():
                 print "Uploading to object store " + outputFile
-                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: " + self.storageToken +"\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile + "> /dev/null"
+                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: " + self.storageToken +"\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile
                 os.system(uploadCommand)
             self.setState(AppState.CLEARED)
             
