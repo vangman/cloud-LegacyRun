@@ -10,6 +10,7 @@ import web
 import json
 import os
 import time
+import logging
 
 import Utility
 
@@ -29,7 +30,7 @@ urls = (
 
 app = Application()
 
-os.chdir(os.environ["APPLICATION_WORKSPACE"])
+os.chdir(os.environ['APPLICATION_WORKSPACE'])
 
 class runner:
         
@@ -41,8 +42,10 @@ class runner:
     def POST(self):
         try:
             action = web.ctx.env['HTTP_ACTION']
+            logging.debug('Got HTTP_ACTION header with content %s',action)
         except KeyError:
             action = None
+            logging.debug('No HTTP_ACTION header received')
 
         if action==None or action=="RUN":
             app.prepareInput()
@@ -228,5 +231,6 @@ class parameters:
             
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='application-service.log', level=logging.DEBUG)
     webapp = web.application(urls, globals())
     webapp.run()
