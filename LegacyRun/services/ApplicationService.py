@@ -81,7 +81,7 @@ class appoutput:
             yield "No standard output available yet\n"
         else:
             try:
-                f = open("/tmp/app-stdout.txt","r")
+                f = open("/tmp/__stdout.log","r")
                 eof = False
                 while not eof:
                     line = f.readline()
@@ -101,7 +101,7 @@ class apperror:
             yield "No standard error available yet\n"
         else:
             try:
-                f = open("/tmp/app-stderr.txt","r")
+                f = open("/tmp/__stderr.log","r")
                 eof = False
                 while not eof:
                     line = f.readline()
@@ -194,9 +194,14 @@ class parameters:
             except KeyError:
                 return "Required header STORAGE_TOKEN is needed for storage " + objectStorage + "\n"
         else:
-            storageToken = None
+            if objectStorage == "local":
+                #TODO: Do something here that will activate local storage
+                storageToken = None
+            else:
+                objectStorage = None
+                storageToken = None
             
-        app.setStorageOptions(objectStorage, storageToken)
+        app.setStorageOptions(objectStorage, storageToken) #TODO: This should probably pass a complete object
         
         # Retrieve and set the input/output endpoints
         body = web.data()
