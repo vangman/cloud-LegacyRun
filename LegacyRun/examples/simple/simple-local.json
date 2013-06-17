@@ -1,0 +1,14 @@
+{
+ 	"application": {
+		"name":"simple_local",
+		"inputFiles": [
+		  ],
+		"outputFiles": [
+			{"output.txt":"/Volumes/UsersHD/Users/vangelis/Development/PhD/Data"}
+		],
+		"streamedOutput": [
+		],
+		"applicationSpecificParameters" : [
+		]
+	}	
+}
