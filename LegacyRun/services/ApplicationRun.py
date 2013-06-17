@@ -54,7 +54,8 @@ class Application:
     password = 'guest'
  
     amqp = {
-        'host' : 'dev.rabbitmq.com',
+        #'host' : 'dev.rabbitmq.com',
+        'host' : 'localhost',
         'port' : 5672,
         'virtual_host' : '/',
         'credentials' : pika.PlainCredentials(username, password)
@@ -177,12 +178,23 @@ class Application:
             self.setState(AppState.READY)
             
     def stageOutput(self):
-        if self.getState() == AppState.DONE and self.storageToken is not None:
+        if self.getState() == AppState.DONE and self.storageType is not None:
             self.setState(AppState.EPILOGUE)
             for outputFile in self.outputData.keys():
                 print "Uploading to object store " + outputFile
-                uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: " + self.storageToken +"\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile
-                os.system(uploadCommand)
+                if self.storageType == "pithos+":
+                    uploadCommand = "curl -s -X PUT -D -  -H \"Content-Type: application/octet-stream\" -H \"X-Auth-Token: " + self.storageToken +"\" -T " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile
+                else:
+                    if self.storageType == "local":
+                        uploadCommand = "cp " + outputFile + " " + self.outputData[outputFile] + "/" + outputFile
+                    else:
+                        uploadCommand == None
+
+                if uploadCommand is not None:
+                    os.system(uploadCommand)
+                else:
+                    logging.debug('No object storage defined. No staging will be performed.')
+
             self.setState(AppState.CLEARED)
             
     def poll(self):
