@@ -6,19 +6,55 @@ Created on 12 May 2012
 
 import web
 
+from FileResource import FileInstance, FileResource
+from urlparse import parse_qs
+
+
 urls = (
-    '/file', 'filemanager'
+    '/file', 'filemanager',
+    '/file/([A-Za-z0-9]+)', 'instanceManager'
     )
 
+files = {}
+
 class filemanager:
+    def POST(self):
+        file = FileResource()
+        files[file.id] = file
+
+        return file.id + "\n"
+
     def GET(self):
-        return "Not implemented\n"
+        for file in files:
+            yield file + "\n"
     
     def PUT(self):
         return "Not implemented\n"
     
     def DELETE(self):
         return "Not implemented\n"
+
+class instanceManager:
+    def GET(self, fileid):
+        web.header('Content-type','text/plain')
+
+        try:
+            yield "File " + files[fileid].getID() + "\n"
+        except KeyError:
+            yield "No such file\n"
+
+    def PUT(self, fileid):
+        """
+        Appends file object with a new version of a real file. URL of the target file is passed as query string
+        :param fileid: id of the file to act upon
+        """
+        try:
+            querystring = parse_qs(web.ctx.env['QUERY_STRING'])
+            url = querystring['url']
+            files[fileid].put(url)
+        except KeyError:
+            yield "No such file\n"
+
     
 if __name__ == "__main__":
     webapp = web.application(urls, globals())

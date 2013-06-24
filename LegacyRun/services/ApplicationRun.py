@@ -210,7 +210,7 @@ class Application:
         
 
     def kill(self):
-        if self.process is not None and self.getState()==AppState.RUNNING:
+        if self.process is not None and self.getState()==AppState.RUNNING or self.getState()==AppState.SUSPENDED:
             self.process.kill()
             self.setState(AppState.ABORTED)
             return True
@@ -218,7 +218,7 @@ class Application:
             return False
 
     def terminate(self):
-        if self.process is not None and self.getState()==AppState.RUNNING:
+        if self.process is not None and self.getState()==AppState.RUNNING or self.getState()==AppState.SUSPENDED:
             self.process.terminate()
             self.setState(AppState.ABORTED)
             return True

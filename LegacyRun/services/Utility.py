@@ -6,6 +6,8 @@ Utility funcions used by other modules
 @author: vangelis
 '''
 
+import string
+import random
     
 def list2dic(inlist):
     outdic = {}
@@ -14,5 +16,8 @@ def list2dic(inlist):
             outdic[key]=value
     
     return outdic
+
+def id_generator(size=20, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for x in range(size))
         
             

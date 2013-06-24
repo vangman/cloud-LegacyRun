@@ -4,10 +4,12 @@ Created on 13 May 2012
 @author: vangelis
 '''
 
+import Utility
+
 class FileInstance(object):
 
     def __init__(self):
-        self.id = None # URL
+        self.id = None # Actual location of the file
         self.version = None # String or Number
         self.context = {} # Context of file creation. Application running state
         
@@ -37,18 +39,21 @@ class FileInstance(object):
 class FileResource(object):
 
     def __init__(self):
-        self.id = None
-        self.versions = None # Array of file versions
+        self.id = Utility.id_generator() # Random 15 character string
+        self.versions = [] # Table of file versions
         self.context = {} # Context of provider application. Configuration parameters
         
     def get(self, version):
         if version==None:
-            return latest
+            return 0
         else:
             return version
+
+    def getID(self):
+        return self.id
         
-    def put(self):
-        copy file on destination
+    def put(self, url):
+        self.versions.append(url)
     
 
         
