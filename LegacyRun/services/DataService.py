@@ -6,37 +6,39 @@ Created on 12 May 2012
 
 import web
 
-from FileResource import FileInstance, FileResource
+from FileResource import FileResource
 from urlparse import parse_qs
 
 
 urls = (
     '/file', 'filemanager',
     '/file/([A-Za-z0-9]+)', 'instanceManager'
-    )
+)
 
 files = {}
 
+
 class filemanager:
     def POST(self):
-        file = FileResource()
-        files[file.id] = file
+        fileResource = FileResource()
+        files[fileResource.id] = fileResource
 
-        return file.id + "\n"
+        return fileResource.id + "\n"
 
     def GET(self):
-        for file in files:
-            yield file + "\n"
-    
+        for fileResource in files:
+            yield fileResource + "\n"
+
     def PUT(self):
         return "Not implemented\n"
-    
+
     def DELETE(self):
         return "Not implemented\n"
 
+
 class instanceManager:
     def GET(self, fileid):
-        web.header('Content-type','text/plain')
+        web.header('Content-type', 'text/plain')
 
         try:
             yield "File " + files[fileid].getID() + "\n"
@@ -55,7 +57,7 @@ class instanceManager:
         except KeyError:
             yield "No such file\n"
 
-    
+
 if __name__ == "__main__":
     webapp = web.application(urls, globals())
     webapp.run()
