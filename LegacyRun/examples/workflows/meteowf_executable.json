@@ -1,0 +1,155 @@
+// This is an annotated workflow
+{
+    "name": "meteoForecast",
+
+    "graph" : {
+
+        "processNodes": [
+            {
+                "id": "proc1",
+                "name": "NOAA_Wrapper",
+                "reference": "http://marketplace.stratuslab.eu/metadata/FPG7anShWeLV3mbCD2wZHKIr8CA",
+                "requires": "none",
+                "provides": [
+                    {
+                        "referenceID": "file2",
+                        "name": "MMINPUT_DOMAIN1",
+                        "ontology": "InitialConditionsforGreece"
+                    }
+                ],
+                "streamedOutput": "none",
+                "executionParameters" : [
+                    {"NOMADSERVER":"nomads.ncep.noaa.gov"},
+                    {"URLVARIABLES":"var_HGT=on&var_UGRD=on&var_VGRD=on&var_TMP=on&var_RH=on&var_PRMSL=on&var_PRES=on&subregion=&leftlon=-30&rightlon=60&toplat=70&bottomlat=20"},
+                    {"TMPLEVELS":"(:TMP:1000|:TMP:950|:TMP:950|:TMP:900|:TMP:850|:TMP:800|:TMP:750|:TMP:700|:TMP:650|:TMP:600|:TMP:550|:TMP:500|:TMP:450|:TMP:400|:TMP:350|:TMP:300|:TMP:250|:TMP:200|:TMP:150|:TMP:100 )"},
+                    {"HGTLEVELS":"(:HGT:1000|:HGT:950|:HGT:950|:HGT:900|:HGT:850|:HGT:800|:HGT:750|:HGT:700|:HGT:650|:HGT:600|:HGT:550|:HGT:500|:HGT:450|:HGT:400|:HGT:350|:HGT:300|:HGT:250|:HGT:200|:HGT:150|:HGT:100 )"},
+                    {"UGRDLEVELS":"(:UGRD:1000|:UGRD:950|:UGRD:950|:UGRD:900|:UGRD:850|:UGRD:800|:UGRD:750|:UGRD:700|:UGRD:650|:UGRD:600|:UGRD:550|:UGRD:500|:UGRD:450|:UGRD:400|:UGRD:350|:UGRD:300|:UGRD:250|:UGRD:200|:UGRD:150|:UGRD:100 )"},
+                    {"VGRDLEVELS":"(:VGRD:1000|:VGRD:950|:VGRD:950|:VGRD:900|:VGRD:850|:VGRD:800|:VGRD:750|:VGRD:700|:VGRD:650|:VGRD:600|:VGRD:550|:VGRD:500|:VGRD:450|:VGRD:400|:VGRD:350|:VGRD:300|:VGRD:250|:VGRD:200|:VGRD:150|:VGRD:100 )"},
+                    {"RHLEVELS":"(:RH:1000|:RH:950|:RH:950|:RH:900|:RH:850|:RH:800|:RH:750|:RH:700|:RH:650|:RH:600|:RH:550|:RH:500|:RH:450|:RH:400|:RH:350|:RH:300|:RH:250|:RH:200|:RH:150|:RH:100 )"},
+                    {"PRMSL":"(:PRMSL:mean )"},
+                    {"TMPSST":"(:TMP:surface)"}
+                ],
+                "environment": {
+                    "runsOn": "StratusLabCloud",
+                    "nodes": 1,
+                    "VMtype": "m1.medium",
+                    "appType": "serial"
+                }
+            },
+            {
+                "id": "proc2",
+                "name": "MM5",
+                "reference": "http://marketplace.stratuslab.eu/metadata/GPAUQFkojP5dMQJNdJ4qD_62mCo",
+                "requires": [
+                    {
+                        "referenceID": "file1",
+                        "name": "TERRAIN_DOMAIN1",
+                        "ontology": "TerrainDataForGreece",
+                        "dependency": "init"
+                    },
+                    {
+                        "referenceID": "file2",
+                        "name": "MMINPUT_DOMAIN1",
+                        "ontology": "domainInitialconditions",
+                        "dependency": "init"
+                    }
+                ],
+                "provides": [
+                    {
+                        "referenceID": "file3",
+                        "name": "MMOUT_DOMAIN1",
+                        "ontology": "3hrForecast"
+                    }
+                ],
+                "streamedOutput": [
+                    {"rsl.out.0000":"None"},
+                    {"rsl.error.0000":"None"}
+                ],
+                "executionParameters" : [
+                    {"FORECASTDAYS":3}
+                ],
+                "environment": {
+                    "runsOn": "StratusLabCloud",
+                    "nodes": 4,
+                    "VMtype": "c1.large",
+                    "appType": "parallel",
+                    "procModel": "MPI2"
+                }
+            },
+            {
+                "id": "proc3",
+                "name": "Visualizer",
+                "reference": "http://marketplace.stratuslab.eu/metadata/fg47anArWeLV3geVF2wZHKIr1af",
+                "requires": [
+                    {
+                        "referenceID": "file3",
+                        "name": "MMOUT_DOMAIN1",
+                        "ontology": "3hrForecast",
+                        "dependency": "perStep"
+                    }
+                ],
+                "provides": "none",
+                "environment": {
+                    "runsOn": "StratusLabCloud",
+                    "nodes": 1,
+                    "VMtype": "m1.large",
+                    "appType": "serial"
+                }
+            }
+        ],
+
+        "dataNodes": [
+            {
+                "id": "file1",
+                "name": "MMINPUT_DOMAIN1",
+                "ontology": "InitialConditionsforGreece",
+                "reference": "https://pithos.okeanos.grnet.gr/public/a23zbn"
+            },
+            {
+                "id": "file2",
+                "name": "TERRAIN_DOMAIN1",
+                "ontology": "TerrainDataforGreece",
+                "reference": "https://pithos.okeanos.grnet.gr/public/c57vn"
+            },
+            {
+                "id": "file3",
+                "name": "MMOUT_DOMAIN1",
+                "ontology": "3hrForecast",
+                "reference": "https://pithos.okeanos.grnet.gr/public/wh2ht5"
+            }
+        ]
+    },
+
+    "runtimeEnvironment" : {
+        "cloudServices": [
+            {
+                "id": "StratusLabCloud",
+                "name":"LAL",
+                "type":"IaaS",
+                "API": "StratusLab",
+                "authentication": {
+                    "username": "vangelis",
+                    "password": "ashf838hdf"
+                }
+            },
+
+            {
+                "name":"pithos+",
+                "type":"objectStorage",
+                "API": "OpenStack",
+                "authentication": {
+                    "token": "udf83hdhdfh8382he88389329324"
+                }
+            }
+        ],
+
+        "notificationService":  {
+            "host" : "dev.rabbitmq.com",
+            "host" : "localhost",
+            "port" : 5672,
+            "virtual_host" : "/",
+            "username": "guest",
+            "password": "guest"
+        }
+    }
+}

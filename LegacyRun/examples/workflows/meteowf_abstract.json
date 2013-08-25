@@ -1,0 +1,82 @@
+// This is an annotated workflow
+{
+    "name": "meteoForecast",
+
+    "graph" : {
+
+        "processNodes": [
+            {
+                "id": "proc1",
+                "name": "NOAA_Wrapper",
+                "requires": "none",
+                "provides": [
+                    {
+                        "referenceID": "file2",
+                        "name": "MMINPUT_DOMAIN1",
+                        "ontology": "InitialConditionsforGreece"
+                    }
+                ]
+            },
+            {
+                "id": "proc2",
+                "name": "MM5",
+                "requires": [
+                    {
+                        "referenceID": "file1",
+                        "name": "TERRAIN_DOMAIN1",
+                        "ontology": "TerrainDataForGreece",
+                        "dependency": "init"
+                    },
+                    {
+                        "referenceID": "file2",
+                        "name": "MMINPUT_DOMAIN1",
+                        "ontology": "domainInitialconditions",
+                        "dependency": "init"
+                    }
+                ],
+                "provides": [
+                    {
+                        "referenceID": "file3",
+                        "name": "MMOUT_DOMAIN1",
+                        "ontology": "3hrForecast"
+                    }
+                ],
+                "environment": {
+                    "appType": "parallel",
+                    "procModel": "MPI2"
+                }
+            },
+            {
+                "id": "proc3",
+                "name": "Visualizer",
+                "requires": [
+                    {
+                        "referenceID": "file3",
+                        "name": "MMOUT_DOMAIN1",
+                        "ontology": "3hrForecast",
+                        "dependency": "perStep"
+                    }
+                ],
+                "provides": "none"
+            }
+        ],
+
+        "dataNodes": [
+            {
+                "id": "file1",
+                "name": "MMINPUT_DOMAIN1",
+                "ontology": "InitialConditionsforGreece"
+            },
+            {
+                "id": "file2",
+                "name": "TERRAIN_DOMAIN1",
+                "ontology": "TerrainDataforGreece"
+            },
+            {
+                "id": "file3",
+                "name": "MMOUT_DOMAIN1",
+                "ontology": "3hrForecast"
+            }
+        ]
+    }
+}

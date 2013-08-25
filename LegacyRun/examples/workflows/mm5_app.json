@@ -1,0 +1,25 @@
+{
+    "name": "MM5",
+    "requires": [
+        {
+            "name": "TERRAIN_DOMAIN1",
+            "ontology": "TerrainDataForGreece",
+            "dependency": "init"
+        },
+        {
+            "name": "MMINPUT_DOMAIN1",
+            "ontology": "domainInitialconditions",
+            "dependency": "init"
+        }
+    ],
+    "provides": [
+        {
+            "name": "MMOUT_DOMAIN1",
+            "ontology": "3hrForecast"
+        }
+    ],
+    "environment": {
+        "appType": "parallel",
+        "procModel": "MPI2"
+    }
+}
